@@ -5,12 +5,26 @@ import shortid from "shortid";
 function App() {
   const [tarea, setTarea] = useState("");
   const [tareas, setTareas] = useState([]);
+  const [editar, setEditar] = useState(false);
+  const [id, setId] = useState("");
+  const [error, setError] = useState(null);
+
+  const validarFormulario = () => {
+    let esValido = true;
+    setError(null);
+
+    if (isEmpty(tarea)) {
+      setError("Debes ingresar una tarea.");
+      return;
+    }
+    return esValido;
+  };
 
   const agregarTarea = (e) => {
     //Evita que la pagina nos recargue
     e.preventDefault();
-    if (isEmpty(tarea)) {
-      console.log("Tarea vacia");
+
+    if (!validarFormulario()) {
       return;
     }
 
@@ -23,9 +37,31 @@ function App() {
     setTarea("");
   };
 
+  const guardarTarea = (e) => {
+    //Evita que la pagina nos recargue
+    e.preventDefault();
+    if (!validarFormulario()) {
+      return;
+    }
+
+    const editarTareas = tareas.map((item) =>
+      item.id === id ? { id, name: tarea } : item
+    );
+    setTareas(editarTareas);
+    setEditar(false);
+    setTarea("");
+    setId("");
+  };
+
   const eliminarTarea = (id) => {
     const filteredTareas = tareas.filter((tarea) => tarea.id !== id);
     setTareas(filteredTareas);
+  };
+
+  const editarTarea = (laTarea) => {
+    setTarea(laTarea.nombre);
+    setEditar(true);
+    setId(laTarea.id);
   };
 
   return (
@@ -36,7 +72,7 @@ function App() {
         <div className="col-8">
           <h4 className="text-center">Lista de Tareas</h4>
           {size(tareas) === 0 ? (
-            <h5 className="text-center">No hay Tareas</h5>
+            <li className="list-group-item">No hay Tareas</li>
           ) : (
             <ul className="list-group">
               {tareas.map((tarea) => (
@@ -48,7 +84,10 @@ function App() {
                   >
                     Eliminar
                   </button>
-                  <button className="btn btn-warning btn-sm float-right">
+                  <button
+                    className="btn btn-warning btn-sm float-right"
+                    onClick={() => editarTarea(tarea)}
+                  >
                     Editar
                   </button>
                 </li>
@@ -57,8 +96,11 @@ function App() {
           )}
         </div>
         <div className="col-4">
-          <h4 className="text-center">Formulario</h4>
-          <form onSubmit={agregarTarea}>
+          <h4 className="text-center">
+            {editar ? "Modificar Tarea" : "Agregar Tarea"}
+          </h4>
+          <form onSubmit={editar ? guardarTarea : agregarTarea}>
+            {error && <span className="text-danger">{error}</span>}
             <input
               type="text"
               className="form-control mb-2"
@@ -66,8 +108,13 @@ function App() {
               onChange={(text) => setTarea(text.target.value)}
               value={tarea}
             />
-            <button className="btn btn-dark btn-block" type="submit">
-              Agregar
+            <button
+              className={
+                editar ? "btn btn-warning btn-block" : "btn btn-dark btn-block"
+              }
+              type="submit"
+            >
+              {editar ? "Guardar" : "Agregar"}
             </button>
           </form>
         </div>
